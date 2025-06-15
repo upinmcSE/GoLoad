@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE IF NOT EXISTS accounts (
     id BIGINT UNSIGNED AUTO_INCREMENT,
     account_name VARCHAR(256) NOT NULL,
