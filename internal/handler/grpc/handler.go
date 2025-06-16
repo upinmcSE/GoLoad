@@ -4,23 +4,40 @@ import (
 	"context"
 
 	"github.com/upinmcSE/GoLoad/internal/generated/grpc/go_load"
+	"github.com/upinmcSE/GoLoad/internal/logic"
 )
 
 type Handler struct {
 	go_load.UnimplementedGoLoadServiceServer
+	accountLogic logic.Account
 }
 
-func NewHandler() go_load.GoLoadServiceServer {
-	return &Handler{}
+func NewHandler(
+	accountLogic logic.Account,
+) go_load.GoLoadServiceServer {
+	return &Handler{
+		accountLogic: accountLogic,
+	}
 }
 
 // CreateAccount implements go_load.GoLoadServiceServer.
-func (a *Handler) CreateAccount(context.Context, *go_load.CreateAccountRequest) (*go_load.CreateAccountResponse, error) {
-	panic("unimplemented")
+func (a Handler) CreateAccount(ctx context.Context, request *go_load.CreateAccountRequest) (*go_load.CreateAccountResponse, error) {
+	output, err := a.accountLogic.CreateAccount(context.Background(), logic.CreateAccountParams{
+		AccountName: request.GetAccountName(),
+		Password:    request.GetPassword(),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &go_load.CreateAccountResponse{
+		AccountId: output.ID,
+	}, nil
 }
 
 // CreateDownloadTask implements go_load.GoLoadServiceServer.
-func (a *Handler) CreateDownloadTask(context.Context, *go_load.CreateDownloadTaskRequest) (*go_load.CreateDownloadTaskResponse, error) {
+func (a *Handler) CreateDownloadTask(ctx context.Context, request *go_load.CreateDownloadTaskRequest) (*go_load.CreateDownloadTaskResponse, error) {
 	panic("unimplemented")
 }
 
@@ -53,3 +70,5 @@ func (a *Handler) UpdateDownloadTask(context.Context, *go_load.UpdateDownloadTas
 func (a *Handler) mustEmbedUnimplementedGoLoadServiceServer() {
 	panic("unimplemented")
 }
+
+//protoc -I=. --go_out=internal/generated --go-grpc_out=internal/generated --grpc-gateway_out=internal/generated --grpc-gateway_opt=generate_unbound_methods=true --openapiv2_out=. --openapiv2_opt=generate_unbound_methods=true --validate_out=lang=go:internal/generated api/go_load.proto
